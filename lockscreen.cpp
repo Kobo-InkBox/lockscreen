@@ -123,4 +123,5 @@ void lockscreen::on_b0_clicked()
 void lockscreen::on_unlockBtn_clicked()
 {
     qDebug() << passcode;
+    passcode = "";
 }
