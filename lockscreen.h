@@ -18,6 +18,7 @@ class lockscreen : public QMainWindow
 public:
     lockscreen(QWidget *parent = nullptr);
     ~lockscreen();
+    QString passcode;
     bool checkconfig(QString file) {
         QFile config(file);
         config.open(QIODevice::ReadWrite);
@@ -32,6 +33,29 @@ public:
         }
         config.close();
     };
+
+private slots:
+    void on_b1_clicked();
+
+    void on_b2_clicked();
+
+    void on_b3_clicked();
+
+    void on_b4_clicked();
+
+    void on_b5_clicked();
+
+    void on_b6_clicked();
+
+    void on_b7_clicked();
+
+    void on_b8_clicked();
+
+    void on_b9_clicked();
+
+    void on_b0_clicked();
+
+    void on_unlockBtn_clicked();
 
 private:
     Ui::lockscreen *ui;
