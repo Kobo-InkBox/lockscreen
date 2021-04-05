@@ -20,7 +20,7 @@ lockscreen::lockscreen(QWidget *parent)
     this->setStyleSheet(stylesheetFile.readAll());
     stylesheetFile.close();
 
-    ui->timeLabel->setStyleSheet("font-size: 20pt");
+    ui->timeLabel->setStyleSheet("font-size: 25pt");
 
     ui->unlockBtn->setProperty("type", "borderless");
     ui->b0->setProperty("type", "borderless");
@@ -34,17 +34,17 @@ lockscreen::lockscreen(QWidget *parent)
     ui->b8->setProperty("type", "borderless");
     ui->b9->setProperty("type", "borderless");
 
-    ui->unlockBtn->setStyleSheet("padding: 20px");
-    ui->b0->setStyleSheet("padding: 35px");
-    ui->b1->setStyleSheet("padding: 35px");
-    ui->b2->setStyleSheet("padding: 35px");
-    ui->b3->setStyleSheet("padding: 35px");
-    ui->b4->setStyleSheet("padding: 35px");
-    ui->b5->setStyleSheet("padding: 35px");
-    ui->b6->setStyleSheet("padding: 35px");
-    ui->b7->setStyleSheet("padding: 35px");
-    ui->b8->setStyleSheet("padding: 35px");
-    ui->b9->setStyleSheet("padding: 35px");
+    ui->unlockBtn->setStyleSheet("padding: 25px");
+    ui->b0->setStyleSheet("padding: 35px; font-size: 12pt");
+    ui->b1->setStyleSheet("padding: 35px; font-size: 12pt");
+    ui->b2->setStyleSheet("padding: 35px; font-size: 12pt");
+    ui->b3->setStyleSheet("padding: 35px; font-size: 12pt");
+    ui->b4->setStyleSheet("padding: 35px; font-size: 12pt");
+    ui->b5->setStyleSheet("padding: 35px; font-size: 12pt");
+    ui->b6->setStyleSheet("padding: 35px; font-size: 12pt");
+    ui->b7->setStyleSheet("padding: 35px; font-size: 12pt");
+    ui->b8->setStyleSheet("padding: 35px; font-size: 12pt");
+    ui->b9->setStyleSheet("padding: 35px; font-size: 12pt");
 
     // Invert screen if dark mode setting is set to "true"
     if(checkconfig("/opt/inkbox_genuine") == true) {
@@ -151,7 +151,7 @@ void lockscreen::on_b0_clicked()
 
 void lockscreen::on_unlockBtn_clicked()
 {
-    if(passcode.size() < 8) {
+    if(passcode.size() != 8) {
         QMessageBox::critical(this, tr("Invalid argument"), tr("The passcode must be 8 characters long."));
         passcode = "";
     }
