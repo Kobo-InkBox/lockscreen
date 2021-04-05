@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QFile>
 #include <QTextStream>
+#include <fstream>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class lockscreen; }
@@ -19,6 +20,10 @@ public:
     lockscreen(QWidget *parent = nullptr);
     ~lockscreen();
     QString passcode;
+    QString checkconfig_str_val;
+    int passcode_int;
+
+    bool set_passcode = false;
     bool checkconfig(QString file) {
         QFile config(file);
         config.open(QIODevice::ReadWrite);
@@ -33,6 +38,20 @@ public:
         }
         config.close();
     };
+    void string_checkconfig(QString file) {
+        QFile config(file);
+        config.open(QIODevice::ReadWrite);
+        QTextStream in (&config);
+        checkconfig_str_val = in.readAll();
+        config.close();
+    }
+    void string_writeconfig(string file, string config_option) {
+        ofstream fhandler;
+        fhandler.open(file);
+        fhandler << config_option;
+        fhandler.close();
+    }
+    int get_passcode();
 
 private slots:
     void on_b1_clicked();

@@ -4,6 +4,9 @@
 #include <QTimer>
 #include <QTime>
 #include <QDebug>
+#include <QProcess>
+#include <QMessageBox>
+#include <QFile>
 
 lockscreen::lockscreen(QWidget *parent)
     : QMainWindow(parent)
@@ -42,6 +45,32 @@ lockscreen::lockscreen(QWidget *parent)
     ui->b7->setStyleSheet("padding: 35px");
     ui->b8->setStyleSheet("padding: 35px");
     ui->b9->setStyleSheet("padding: 35px");
+
+    // Invert screen if dark mode setting is set to "true"
+    if(checkconfig("/opt/inkbox_genuine") == true) {
+        if(checkconfig(".config/10-dark_mode/config") == true) {
+            string_writeconfig("/tmp/invertScreen", "y");
+        }
+        else {
+            string_writeconfig("/tmp/invertScreen", "n");
+        }
+    }
+
+    // Checking if we have to set a passcode
+    if(checkconfig("/tmp/setPasscode") == true) {
+        set_passcode = true;
+        string_writeconfig("/tmp/setPasscode", "false");
+    }
+    else {
+        set_passcode = false;
+        get_passcode();
+        string_writeconfig("/tmp/setPasscode", "false");
+    }
+
+    if(set_passcode == true) {
+        ui->welcomeLabel->setText("Type in a passcode");
+        ui->unlockBtn->setText("Set passcode");
+    }
 
     // Showing time
     if(checkconfig(".config/02-clock/config") == true) {
@@ -122,6 +151,62 @@ void lockscreen::on_b0_clicked()
 
 void lockscreen::on_unlockBtn_clicked()
 {
-    qDebug() << passcode;
-    passcode = "";
+    if(passcode.size() < 8) {
+        QMessageBox::critical(this, tr("Invalid argument"), tr("The passcode must be 8 characters long."));
+        passcode = "";
+    }
+    else {
+        if(set_passcode == true) {
+            // TODO: find a better obfuscation technique
+            string passcode_str = passcode.toStdString();
+            string_writeconfig("/tmp/passcode", passcode_str);
+            QString prog ("dd");
+            QStringList args;
+            args << "if=/tmp/passcode" << "of=/dev/mmcblk0" << "bs=256" << "seek=159745";
+            QProcess *proc = new QProcess();
+            proc->start(prog, args);
+            proc->waitForFinished();
+            QFile::remove("/tmp/passcode");
+            passcode = "";
+        }
+        else {
+            int setPasscode = get_passcode();
+            passcode_int = passcode.toInt();
+            if(passcode_int == setPasscode) {
+                // Just in case
+                passcode = "";
+
+                QFile::copy("wake.sh", "/external_root/tmp/wake.sh");
+
+                QString prog ("chroot");
+                QStringList args;
+                args << "/external_root" << "/tmp/wake.sh";
+                QProcess *proc = new QProcess();
+                proc->startDetached(prog, args);
+                qApp->quit();
+            }
+            else {
+                QMessageBox::critical(this, tr("Invalid passcode"), tr("Invalid passcode. Please try again."));
+                passcode = "";
+            }
+        }
+    }
+}
+
+int lockscreen::get_passcode() {
+    string_checkconfig("/opt/inkbox_device");
+    if(checkconfig_str_val == "n705\n") {
+        QString prog ("dd");
+        QStringList args;
+        args << "if=/dev/mmcblk0" << "bs=256" << "skip=159745" << "count=1" << "status=none";
+        QProcess *proc = new QProcess();
+        proc->start(prog, args);
+        proc->waitForFinished();
+
+        QString procOutput = proc->readAllStandardOutput();
+        procOutput = procOutput.left(8);
+
+        int setPasscode = procOutput.toInt();
+        return setPasscode;
+    }
 }
