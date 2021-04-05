@@ -168,6 +168,10 @@ void lockscreen::on_unlockBtn_clicked()
             proc->waitForFinished();
             QFile::remove("/tmp/passcode");
             passcode = "";
+
+            QProcess process;
+            process.startDetached("inkbox", QStringList());
+            qApp->quit();
         }
         else {
             int setPasscode = get_passcode();
