@@ -180,13 +180,22 @@ void lockscreen::on_unlockBtn_clicked()
                 // Just in case
                 passcode = "";
 
-                QFile::copy("wake.sh", "/external_root/tmp/wake.sh");
+                QFile::copy("splash.sh", "/external_root/tmp/splash.sh");
 
+                // Displaying previous framebuffer shot to speed things up
                 QString prog ("chroot");
                 QStringList args;
-                args << "/external_root" << "/tmp/wake.sh";
+                args << "/external_root" << "/tmp/splash.sh";
                 QProcess *proc = new QProcess();
-                proc->startDetached(prog, args);
+                proc->start(prog, args);
+                proc->waitForFinished();
+
+                // "Waking" InkBox
+                QString wakeProg ("sh");
+                QStringList wakeArgs;
+                wakeArgs << "wake.sh";
+                QProcess *wakeProc = new QProcess();
+                wakeProc->startDetached(wakeProg, wakeArgs);
                 qApp->quit();
             }
             else {
@@ -198,8 +207,8 @@ void lockscreen::on_unlockBtn_clicked()
 }
 
 int lockscreen::get_passcode() {
-    string_checkconfig("/opt/inkbox_device");
-    if(checkconfig_str_val == "n705\n") {
+    string_checkconfig_ro("/opt/inkbox_device");
+    if(checkconfig_str_val == "n705\n" or checkconfig_str_val == "n905\n") {
         QString prog ("dd");
         QStringList args;
         args << "if=/dev/mmcblk0" << "bs=256" << "skip=159745" << "count=1" << "status=none";
