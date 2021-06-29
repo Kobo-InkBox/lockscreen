@@ -59,6 +59,12 @@ public:
         fhandler.close();
     }
     int get_passcode();
+    void set_brightness(int value);
+    void set_brightness_ntxio(int value);
+    int get_brightness();
+    void pre_set_brightness(int brightnessValue);
+    void cinematicBrightness(int value, int mode);
+    void setDefaultWorkDir();
 
 private slots:
     void on_b1_clicked();
@@ -82,6 +88,8 @@ private slots:
     void on_b0_clicked();
 
     void on_unlockBtn_clicked();
+
+    void setInitialBrightness();
 
 private:
     Ui::lockscreen *ui;

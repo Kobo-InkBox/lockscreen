@@ -7,6 +7,12 @@
 #include <QProcess>
 #include <QMessageBox>
 #include <QFile>
+#include <QThread>
+#include <QDir>
+
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 
 lockscreen::lockscreen(QWidget *parent)
     : QMainWindow(parent)
@@ -91,6 +97,9 @@ lockscreen::lockscreen(QWidget *parent)
         } );
         t->start();
     }
+
+    // Cinematic brightness
+    QTimer::singleShot(2000, this, SLOT(setInitialBrightness()));
 }
 
 lockscreen::~lockscreen()
@@ -98,6 +107,13 @@ lockscreen::~lockscreen()
     delete ui;
 }
 
+void lockscreen::setInitialBrightness() {
+    setDefaultWorkDir();
+    string_checkconfig_ro(".config/03-brightness/config");
+    int brightness_value = checkconfig_str_val.toInt();
+    string_writeconfig("/tmp/inkbox-cinematicBrightness_ran", "true");
+    cinematicBrightness(brightness_value, 0);
+}
 
 void lockscreen::on_b1_clicked()
 {
@@ -180,15 +196,20 @@ void lockscreen::on_unlockBtn_clicked()
                 // Just in case
                 passcode = "";
 
-                QFile::copy("splash.sh", "/external_root/tmp/splash.sh");
+                if(checkconfig("/inkbox/bookIsEpub") == true) {
+                    ;
+                }
+                else {
+                    QFile::copy("splash.sh", "/external_root/tmp/splash.sh");
 
-                // Displaying previous framebuffer shot to speed things up
-                QString prog ("chroot");
-                QStringList args;
-                args << "/external_root" << "/tmp/splash.sh";
-                QProcess *proc = new QProcess();
-                proc->start(prog, args);
-                proc->waitForFinished();
+                    // Displaying previous framebuffer shot to speed things up
+                    QString prog ("chroot");
+                    QStringList args;
+                    args << "/external_root" << "/tmp/splash.sh";
+                    QProcess *proc = new QProcess();
+                    proc->start(prog, args);
+                    proc->waitForFinished();
+                }
 
                 // "Waking" InkBox
                 QString wakeProg ("sh");
@@ -208,7 +229,7 @@ void lockscreen::on_unlockBtn_clicked()
 
 int lockscreen::get_passcode() {
     string_checkconfig_ro("/opt/inkbox_device");
-    if(checkconfig_str_val == "n705\n" or checkconfig_str_val == "n905\n") {
+    if(checkconfig_str_val == "n705\n" or checkconfig_str_val == "n905\n" or checkconfig_str_val == "n613\n") {
         QString prog ("dd");
         QStringList args;
         args << "if=/dev/mmcblk0" << "bs=256" << "skip=159745" << "count=1" << "status=none";
@@ -222,4 +243,84 @@ int lockscreen::get_passcode() {
         int setPasscode = procOutput.toInt();
         return setPasscode;
     }
+}
+
+void lockscreen::set_brightness(int value) {
+    std::ofstream fhandler;
+    fhandler.open("/var/run/brightness");
+    fhandler << value;
+    fhandler.close();
+}
+
+void lockscreen::set_brightness_ntxio(int value) {
+    // Thanks to Kevin Short for this (GloLight)
+    int light;
+    if((light = open("/dev/ntx_io", O_RDWR)) == -1) {
+            fprintf(stderr, "Error opening ntx_io device\n");
+    }
+    ioctl(light, 241, value);
+}
+
+int lockscreen::get_brightness() {
+    string_checkconfig_ro("/opt/inkbox_device");
+    if(checkconfig_str_val == "n613") {
+        string_checkconfig_ro(".config/03-brightness/config");
+        int brightness;
+        if(checkconfig_str_val == "") {
+            brightness = 0;
+        }
+        else {
+            brightness = checkconfig_str_val.toInt();
+        }
+        return brightness;
+    }
+    else {
+        QFile brightness("/var/run/brightness");
+        brightness.open(QIODevice::ReadOnly);
+        QString valuestr = brightness.readAll();
+        int value = valuestr.toInt();
+        brightness.close();
+        return value;
+    }
+    return 0;
+}
+
+void lockscreen::pre_set_brightness(int brightnessValue) {
+    string_checkconfig_ro("/opt/inkbox_device");
+
+    if(checkconfig_str_val == "n705\n" or checkconfig_str_val == "n905\n") {
+        set_brightness(brightnessValue);
+    }
+    else if(checkconfig_str_val == "n613\n") {
+        set_brightness_ntxio(brightnessValue);
+    }
+    else {
+        set_brightness(brightnessValue);
+    }
+}
+void lockscreen::cinematicBrightness(int value, int mode) {
+    /* mode can be 0 or 1, respectively
+     * 0: Bring UP brightness
+     * 1: Bring DOWN brightness
+    */
+    if(mode == 0) {
+        int brightness = 0;
+        while(brightness != value) {
+            brightness = brightness + 1;
+            pre_set_brightness(brightness);
+            QThread::msleep(30);
+        }
+    }
+    else {
+        int brightness = get_brightness();
+        while(brightness != 0) {
+            brightness = brightness - 1;
+            pre_set_brightness(brightness);
+            QThread::msleep(30);
+        }
+    }
+}
+
+void lockscreen::setDefaultWorkDir() {
+    QDir::setCurrent("/mnt/onboard/.adds/inkbox");
 }
