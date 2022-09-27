@@ -1,7 +1,7 @@
 #ifndef LOCKSCREEN_H
 #define LOCKSCREEN_H
 
-#include <QMainWindow>
+#include <QDialog>
 #include <QFile>
 #include <QTextStream>
 #include <fstream>
@@ -12,12 +12,12 @@ QT_END_NAMESPACE
 
 using namespace std;
 
-class lockscreen : public QMainWindow
+class lockscreen : public QDialog
 {
     Q_OBJECT
 
 public:
-    lockscreen(QWidget *parent = nullptr);
+    lockscreen(QDialog *parent = nullptr);
     ~lockscreen();
     QString passcode;
     QString checkconfig_str_val;

@@ -9,16 +9,30 @@
 #include <QFile>
 #include <QThread>
 #include <QDir>
+#include <QDebug>
+#include <QScreen>
 
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
-lockscreen::lockscreen(QWidget *parent)
-    : QMainWindow(parent)
+lockscreen::lockscreen(QDialog *parent)
+    : QDialog(parent)
     , ui(new Ui::lockscreen)
 {
     ui->setupUi(this);
+    qDebug() << "Setting up lockscreen";
+
+    // Nothing other works
+    QRect screenSize = QGuiApplication::screens()[0]->geometry();
+    int dialogX = (screenSize.width() / 5) * 3;
+    int dialogY = (screenSize.height() / 5) * 3;
+    int positionX = ((screenSize.width() - dialogX) / 2);
+    int positionY = ((screenSize.height() - dialogY) / 2);
+    qDebug() << dialogX << dialogY << positionX << positionY;
+
+    this->move(positionX, positionY);
+    this->setFixedSize(QSize(dialogX, dialogY));
 
     // Stylesheet and style
     QFile stylesheetFile(":/eink.qss");
@@ -26,9 +40,6 @@ lockscreen::lockscreen(QWidget *parent)
     this->setStyleSheet(stylesheetFile.readAll());
     stylesheetFile.close();
 
-    ui->timeLabel->setStyleSheet("font-size: 25pt");
-
-    ui->unlockBtn->setProperty("type", "borderless");
     ui->b0->setProperty("type", "borderless");
     ui->b1->setProperty("type", "borderless");
     ui->b2->setProperty("type", "borderless");
@@ -39,8 +50,13 @@ lockscreen::lockscreen(QWidget *parent)
     ui->b7->setProperty("type", "borderless");
     ui->b8->setProperty("type", "borderless");
     ui->b9->setProperty("type", "borderless");
+    ui->acceptBtn->setProperty("type", "borderless");
+    ui->delButton->setProperty("type", "borderless");
+    ui->ShowPasswordButton->setProperty("type", "borderless");
 
-    ui->unlockBtn->setStyleSheet("padding: 25px");
+    ui->ShowPasswordButton->setIcon(QIcon("://resources/show.png"));
+    /*
+
     ui->b0->setStyleSheet("padding: 35px; font-size: 12pt");
     ui->b1->setStyleSheet("padding: 35px; font-size: 12pt");
     ui->b2->setStyleSheet("padding: 35px; font-size: 12pt");
@@ -51,7 +67,6 @@ lockscreen::lockscreen(QWidget *parent)
     ui->b7->setStyleSheet("padding: 35px; font-size: 12pt");
     ui->b8->setStyleSheet("padding: 35px; font-size: 12pt");
     ui->b9->setStyleSheet("padding: 35px; font-size: 12pt");
-
     // Invert screen if dark mode setting is set to "true"
     if(checkconfig("/opt/inkbox_genuine") == true) {
         if(checkconfig(".config/10-dark_mode/config") == true) {
@@ -100,6 +115,7 @@ lockscreen::lockscreen(QWidget *parent)
 
     // Cinematic brightness
     QTimer::singleShot(2000, this, SLOT(setInitialBrightness()));
+    */
 }
 
 lockscreen::~lockscreen()
@@ -254,11 +270,13 @@ void lockscreen::set_brightness(int value) {
 
 void lockscreen::set_brightness_ntxio(int value) {
     // Thanks to Kevin Short for this (GloLight)
+    /*
     int light;
     if((light = open("/dev/ntx_io", O_RDWR)) == -1) {
             fprintf(stderr, "Error opening ntx_io device\n");
     }
     ioctl(light, 241, value);
+    */
 }
 
 int lockscreen::get_brightness() {
