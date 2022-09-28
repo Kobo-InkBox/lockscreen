@@ -55,43 +55,6 @@ lockscreen::lockscreen(QDialog *parent)
     ui->ShowPasswordButton->setProperty("type", "borderless");
 
     ui->ShowPasswordButton->setIcon(QIcon("://resources/show.png"));
-    /*
-
-    ui->b0->setStyleSheet("padding: 35px; font-size: 12pt");
-    ui->b1->setStyleSheet("padding: 35px; font-size: 12pt");
-    ui->b2->setStyleSheet("padding: 35px; font-size: 12pt");
-    ui->b3->setStyleSheet("padding: 35px; font-size: 12pt");
-    ui->b4->setStyleSheet("padding: 35px; font-size: 12pt");
-    ui->b5->setStyleSheet("padding: 35px; font-size: 12pt");
-    ui->b6->setStyleSheet("padding: 35px; font-size: 12pt");
-    ui->b7->setStyleSheet("padding: 35px; font-size: 12pt");
-    ui->b8->setStyleSheet("padding: 35px; font-size: 12pt");
-    ui->b9->setStyleSheet("padding: 35px; font-size: 12pt");
-    // Invert screen if dark mode setting is set to "true"
-    if(checkconfig("/opt/inkbox_genuine") == true) {
-        if(checkconfig(".config/10-dark_mode/config") == true) {
-            string_writeconfig("/tmp/invertScreen", "y");
-        }
-        else {
-            string_writeconfig("/tmp/invertScreen", "n");
-        }
-    }
-
-    // Checking if we have to set a passcode
-    if(checkconfig("/tmp/setPasscode") == true) {
-        set_passcode = true;
-        string_writeconfig("/tmp/setPasscode", "false");
-    }
-    else {
-        set_passcode = false;
-        get_passcode();
-        string_writeconfig("/tmp/setPasscode", "false");
-    }
-
-    if(set_passcode == true) {
-        ui->welcomeLabel->setText("Type in a passcode");
-        ui->unlockBtn->setText("Set passcode");
-    }
 
     // Showing time
     if(checkconfig(".config/02-clock/config") == true) {
@@ -112,10 +75,6 @@ lockscreen::lockscreen(QDialog *parent)
         } );
         t->start();
     }
-
-    // Cinematic brightness
-    QTimer::singleShot(2000, this, SLOT(setInitialBrightness()));
-    */
 }
 
 lockscreen::~lockscreen()

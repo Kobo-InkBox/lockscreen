@@ -3,7 +3,7 @@ echo what
 
 mv lockscreen exec | EXIT_CODE=0
 
-servername="root@192.168.2.2"
+servername="root@10.42.0.28"
 passwd="root"
 
 sshpass -p $passwd ssh $servername "bash -c \"ifsctl mnt rootfs rw\""
