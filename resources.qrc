@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>eink.qss</file>
         <file>resources/show.png</file>
     </qresource>
 </RCC>

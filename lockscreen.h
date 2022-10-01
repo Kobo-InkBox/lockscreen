@@ -19,52 +19,12 @@ class lockscreen : public QDialog
 public:
     lockscreen(QDialog *parent = nullptr);
     ~lockscreen();
-    QString passcode;
-    QString checkconfig_str_val;
-    int passcode_int;
 
-    bool set_passcode = false;
-    bool checkconfig(QString file) {
-        QFile config(file);
-        config.open(QIODevice::ReadWrite);
-        QTextStream in (&config);
-        const QString content = in.readAll();
-        string contentstr = content.toStdString();
-        if(contentstr.find("true") != std::string::npos) {
-            return true;
-        }
-        else {
-            return false;
-        }
-        config.close();
-    };
-    void string_checkconfig(QString file) {
-        QFile config(file);
-        config.open(QIODevice::ReadWrite);
-        QTextStream in (&config);
-        checkconfig_str_val = in.readAll();
-        config.close();
-    }
-    void string_checkconfig_ro(QString file) {
-        QFile config(file);
-        config.open(QIODevice::ReadOnly);
-        QTextStream in (&config);
-        checkconfig_str_val = in.readAll();
-        config.close();
-    }
-    void string_writeconfig(string file, string config_option) {
-        ofstream fhandler;
-        fhandler.open(file);
-        fhandler << config_option;
-        fhandler.close();
-    }
-    int get_passcode();
-    void set_brightness(int value);
-    void set_brightness_ntxio(int value);
-    int get_brightness();
-    void pre_set_brightness(int brightnessValue);
-    void cinematicBrightness(int value, int mode);
-    void setDefaultWorkDir();
+    bool showPasscode = false;
+    QString passcode = "";
+
+    void addNumber(QString number);
+
 
 private slots:
     void on_b1_clicked();
@@ -87,9 +47,11 @@ private slots:
 
     void on_b0_clicked();
 
-    void on_unlockBtn_clicked();
+    void on_ShowPasswordButton_clicked();
 
-    void setInitialBrightness();
+    void on_delButton_clicked();
+
+    void on_acceptBtn_clicked();
 
 private:
     Ui::lockscreen *ui;

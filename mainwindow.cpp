@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "lockscreen.h"
+#include "global.h"
 
 #include "ui_mainwindow.h"
 
@@ -14,24 +15,26 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    std::ofstream fhandler;
-    fhandler.open("/opt/ibxd");
-    fhandler << "screenshot\n";
-    fhandler.close();
-
-    QDir::setCurrent("/mnt/onboard/.adds/inkbox");
-
-    QString file = ".config/12-lockscreen/background";
-    if(QFile::exists(file)) {
-        QFile fileToRead(file);
-        fileToRead.open(QIODevice::ReadOnly);
-        QTextStream in (&fileToRead);
-        QString content = in.readAll();
+    if(choosedBackground == Background) {
+        this->ui->centralwidget->setStyleSheet("background-image:url(\"/external_root/tmp/lockscreen.png\"); background-position: center;");
     }
-
-    this->ui->centralwidget->setStyleSheet("background-image:url(\"/external_root/tmp/lockscreen.png\"); background-position: center;");
-
+    if(choosedBackground == ScreenSaver){
+        QString screenSaverUsedPath = "/external_root/tmp/screensaver-used.txt";
+        if(QFile(screenSaverUsedPath).exists() == true) {
+            QString screenSaverFilePath = readFile(screenSaverUsedPath).replace("\n", "");
+            QString path = "/mnt/onboard/onboard/.screensaver/" + screenSaverFilePath;
+            QString stylesheetReplace = "background-image:url(\"PATH\"); background-position: center;";
+             this->ui->centralwidget->setStyleSheet(stylesheetReplace.replace("PATH", path));
+        }
+        else {
+            choosedBackground = Blank;
+        }
+    }
+    if(choosedBackground == Blank) {
+        this->ui->centralwidget->setStyleSheet("background-color: white");
+    }
     QTimer::singleShot(100, this, &MainWindow::launchDialog);
+
 }
 
 MainWindow::~MainWindow()
@@ -43,5 +46,6 @@ void MainWindow::launchDialog() {
     qDebug() << "Launching dialog";
 
     lockscreen* lockscreenDialog = new lockscreen;
+    lockscreenDialog->setWindowFlag(Qt::FramelessWindowHint);
     lockscreenDialog->exec();
 }

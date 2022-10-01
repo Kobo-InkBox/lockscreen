@@ -9,11 +9,13 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    global.cpp \
     lockscreen.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
+    global.h \
     lockscreen.h \
     mainwindow.h
 
@@ -28,3 +30,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     resources.qrc
+
+# unix:!macx: LIBS += -L$$PWD/libbuild/libevdev/ -levdev
+
+# INCLUDEPATH += $$PWD/lib/libevdev/libevdev
+# DEPENDPATH += $$PWD/lib/libevdev/libevdev

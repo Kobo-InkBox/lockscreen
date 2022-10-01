@@ -1,5 +1,6 @@
 #include "lockscreen.h"
 #include "ui_lockscreen.h"
+#include "global.h"
 
 #include <QTimer>
 #include <QTime>
@@ -11,6 +12,9 @@
 #include <QDir>
 #include <QDebug>
 #include <QScreen>
+#include <QCryptographicHash>
+
+#include <QApplication>
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -23,6 +27,13 @@ lockscreen::lockscreen(QDialog *parent)
     ui->setupUi(this);
     qDebug() << "Setting up lockscreen";
 
+    // Stylesheet
+    QApplication::setStyle("windows");
+    QFile stylesheetFile("/mnt/onboard/.adds/inkbox/eink.qss");
+    stylesheetFile.open(QFile::ReadOnly);
+    this->setStyleSheet(stylesheetFile.readAll());
+    stylesheetFile.close();
+
     // Nothing other works
     QRect screenSize = QGuiApplication::screens()[0]->geometry();
     int dialogX = (screenSize.width() / 5) * 3;
@@ -33,12 +44,6 @@ lockscreen::lockscreen(QDialog *parent)
 
     this->move(positionX, positionY);
     this->setFixedSize(QSize(dialogX, dialogY));
-
-    // Stylesheet and style
-    QFile stylesheetFile(":/eink.qss");
-    stylesheetFile.open(QFile::ReadOnly);
-    this->setStyleSheet(stylesheetFile.readAll());
-    stylesheetFile.close();
 
     ui->b0->setProperty("type", "borderless");
     ui->b1->setProperty("type", "borderless");
@@ -55,6 +60,8 @@ lockscreen::lockscreen(QDialog *parent)
     ui->ShowPasswordButton->setProperty("type", "borderless");
 
     ui->ShowPasswordButton->setIcon(QIcon("://resources/show.png"));
+
+    ui->passTextEdit->setStyleSheet("QLineEdit { selection-background-color: white; selection-color: black }");
 
     // Showing time
     if(checkconfig(".config/02-clock/config") == true) {
@@ -75,6 +82,9 @@ lockscreen::lockscreen(QDialog *parent)
         } );
         t->start();
     }
+    if(choosedBackground == Blank) {
+        ui->frame->setStyleSheet(".QFrame{background-color: white; border: 4px solid black; border-radius: 10px;}");
+    }
 }
 
 lockscreen::~lockscreen()
@@ -82,222 +92,126 @@ lockscreen::~lockscreen()
     delete ui;
 }
 
-void lockscreen::setInitialBrightness() {
-    setDefaultWorkDir();
-    string_checkconfig_ro(".config/03-brightness/config");
-    int brightness_value = checkconfig_str_val.toInt();
-    string_writeconfig("/tmp/inkbox-cinematicBrightness_ran", "true");
-    cinematicBrightness(brightness_value, 0);
-}
-
 void lockscreen::on_b1_clicked()
 {
-    passcode.append("1");
+    addNumber("1");
 }
 
 void lockscreen::on_b2_clicked()
 {
-    passcode.append("2");
+    addNumber("2");
 }
 
 void lockscreen::on_b3_clicked()
 {
-    passcode.append("3");
+    addNumber("3");
 }
 
 void lockscreen::on_b4_clicked()
 {
-    passcode.append("4");
+    addNumber("4");
 }
 
 void lockscreen::on_b5_clicked()
 {
-    passcode.append("5");
+    addNumber("5");
 }
 
 void lockscreen::on_b6_clicked()
 {
-    passcode.append("6");
+    addNumber("6");
 }
 
 void lockscreen::on_b7_clicked()
 {
-    passcode.append("7");
+    addNumber("7");
 }
 
 void lockscreen::on_b8_clicked()
 {
-    passcode.append("8");
+    addNumber("8");
 }
 
 void lockscreen::on_b9_clicked()
 {
-    passcode.append("9");
+    addNumber("9");
 }
 
 void lockscreen::on_b0_clicked()
 {
-    passcode.append("0");
-}
-
-void lockscreen::on_unlockBtn_clicked()
-{
-    if(passcode.size() != 8) {
-        QMessageBox::critical(this, tr("Invalid argument"), tr("The passcode must be 8 characters long."));
-        passcode = "";
-    }
-    else {
-        if(set_passcode == true) {
-            // TODO: find a better obfuscation technique
-            string passcode_str = passcode.toStdString();
-            string_writeconfig("/tmp/passcode", passcode_str);
-            QString prog ("dd");
-            QStringList args;
-            args << "if=/tmp/passcode" << "of=/dev/mmcblk0" << "bs=256" << "seek=159745";
-            QProcess *proc = new QProcess();
-            proc->start(prog, args);
-            proc->waitForFinished();
-            QFile::remove("/tmp/passcode");
-            passcode = "";
-
-            QProcess process;
-            process.startDetached("inkbox", QStringList());
-            qApp->quit();
-        }
-        else {
-            int setPasscode = get_passcode();
-            passcode_int = passcode.toInt();
-            if(passcode_int == setPasscode) {
-                // Just in case
-                passcode = "";
-
-                if(checkconfig("/inkbox/bookIsEpub") == true) {
-                    ;
-                }
-                else {
-                    QFile::copy("splash.sh", "/external_root/tmp/splash.sh");
-
-                    // Displaying previous framebuffer shot to speed things up
-                    QString prog ("chroot");
-                    QStringList args;
-                    args << "/external_root" << "/tmp/splash.sh";
-                    QProcess *proc = new QProcess();
-                    proc->start(prog, args);
-                    proc->waitForFinished();
-                }
-
-                // "Waking" InkBox
-                QString wakeProg ("sh");
-                QStringList wakeArgs;
-                wakeArgs << "wake.sh";
-                QProcess *wakeProc = new QProcess();
-                wakeProc->startDetached(wakeProg, wakeArgs);
-                qApp->quit();
-            }
-            else {
-                QMessageBox::critical(this, tr("Invalid passcode"), tr("Invalid passcode. Please try again."));
-                passcode = "";
-            }
-        }
-    }
-}
-
-int lockscreen::get_passcode() {
-    string_checkconfig_ro("/opt/inkbox_device");
-    if(checkconfig_str_val == "n705\n" or checkconfig_str_val == "n905\n" or checkconfig_str_val == "n613\n") {
-        QString prog ("dd");
-        QStringList args;
-        args << "if=/dev/mmcblk0" << "bs=256" << "skip=159745" << "count=1" << "status=none";
-        QProcess *proc = new QProcess();
-        proc->start(prog, args);
-        proc->waitForFinished();
-
-        QString procOutput = proc->readAllStandardOutput();
-        procOutput = procOutput.left(8);
-
-        int setPasscode = procOutput.toInt();
-        return setPasscode;
-    }
-}
-
-void lockscreen::set_brightness(int value) {
-    std::ofstream fhandler;
-    fhandler.open("/var/run/brightness");
-    fhandler << value;
-    fhandler.close();
-}
-
-void lockscreen::set_brightness_ntxio(int value) {
-    // Thanks to Kevin Short for this (GloLight)
+    addNumber("0");
     /*
-    int light;
-    if((light = open("/dev/ntx_io", O_RDWR)) == -1) {
-            fprintf(stderr, "Error opening ntx_io device\n");
+    struct libevdev * dev = NULL;
+    int fd = ::open("/dev/input/event1", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+    int rc = libevdev_new_from_fd(fd, &dev);
+    if(libevdev_grab(dev, LIBEVDEV_GRAB) == 0) {
+        qDebug() << "Grabbed touchscreen";
     }
-    ioctl(light, 241, value);
+    else {
+        qDebug() << "ERROR: Failed to grab touchscreen";
+    }
+
+    if (rc < 0) {
+        qDebug() << "ERROR: Failed to init libevdev";
+    }
     */
 }
 
-int lockscreen::get_brightness() {
-    string_checkconfig_ro("/opt/inkbox_device");
-    if(checkconfig_str_val == "n613") {
-        string_checkconfig_ro(".config/03-brightness/config");
-        int brightness;
-        if(checkconfig_str_val == "") {
-            brightness = 0;
-        }
-        else {
-            brightness = checkconfig_str_val.toInt();
-        }
-        return brightness;
-    }
-    else {
-        QFile brightness("/var/run/brightness");
-        brightness.open(QIODevice::ReadOnly);
-        QString valuestr = brightness.readAll();
-        int value = valuestr.toInt();
-        brightness.close();
-        return value;
-    }
-    return 0;
-}
+void lockscreen::addNumber(QString number) {
+    passcode.append(number);
 
-void lockscreen::pre_set_brightness(int brightnessValue) {
-    string_checkconfig_ro("/opt/inkbox_device");
-
-    if(checkconfig_str_val == "n705\n" or checkconfig_str_val == "n905\n") {
-        set_brightness(brightnessValue);
-    }
-    else if(checkconfig_str_val == "n613\n") {
-        set_brightness_ntxio(brightnessValue);
+    if(showPasscode == true) {
+        ui->passTextEdit->setText(passcode);
     }
     else {
-        set_brightness(brightnessValue);
-    }
-}
-void lockscreen::cinematicBrightness(int value, int mode) {
-    /* mode can be 0 or 1, respectively
-     * 0: Bring UP brightness
-     * 1: Bring DOWN brightness
-    */
-    if(mode == 0) {
-        int brightness = 0;
-        while(brightness != value) {
-            brightness = brightness + 1;
-            pre_set_brightness(brightness);
-            QThread::msleep(30);
+        int count = passcode.count();
+        QString hiddedPasscode = "";
+        for (int i = 0; i < count; i++) {
+            hiddedPasscode.append("●");
         }
-    }
-    else {
-        int brightness = get_brightness();
-        while(brightness != 0) {
-            brightness = brightness - 1;
-            pre_set_brightness(brightness);
-            QThread::msleep(30);
-        }
+        ui->passTextEdit->setText(hiddedPasscode);
     }
 }
 
-void lockscreen::setDefaultWorkDir() {
-    QDir::setCurrent("/mnt/onboard/.adds/inkbox");
+void lockscreen::on_ShowPasswordButton_clicked()
+{
+    if(showPasscode == true) {
+        showPasscode = false;
+        addNumber("");
+    }
+    else {
+        showPasscode = true;
+        addNumber("");
+    }
+}
+void lockscreen::on_delButton_clicked()
+{
+    passcode.chop(1);
+    addNumber("");
+}
+
+void lockscreen::on_acceptBtn_clicked()
+{
+    QByteArray passwordBytes = readFileBytes(".config/12-lockscreen/password");
+    QString saltBytes = readFile(".config/12-lockscreen/salt").replace("\n", "");
+
+    QCryptographicHash hasher(QCryptographicHash::RealSha3_512);
+    hasher.addData(passcode.toLocal8Bit() + saltBytes.toLocal8Bit());
+
+    QByteArray hash = hasher.result();
+    qDebug() << "Hash is: " << hash;
+
+    if(hash == passwordBytes) {
+        qDebug() << "Correct password provided";
+        for(int pid: pidList) {
+            unfreezeApp(pid);
+        }
+        qApp->quit();
+    }
+    else {
+        qDebug() << "Password is incorect";
+        passcode = "";
+        addNumber("");
+        QMessageBox::critical(this, tr("Invalid passcode"), tr("Invalid passcode. Please try again."));
+    }
 }
