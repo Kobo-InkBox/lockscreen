@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
         QString screenSaverUsedPath = "/external_root/tmp/screensaver-used.txt";
         if(QFile(screenSaverUsedPath).exists() == true) {
             QString screenSaverFilePath = readFile(screenSaverUsedPath).replace("\n", "");
-            QString path = "/mnt/onboard/onboard/.screensaver/" + screenSaverFilePath;
+            QString path = "/mnt/onboard/onboard/.screensaver/" + screenSaverFilePath.split("/").last();
             QString stylesheetReplace = "background-image:url(\"PATH\"); background-position: center;";
              this->ui->centralwidget->setStyleSheet(stylesheetReplace.replace("PATH", path));
         }

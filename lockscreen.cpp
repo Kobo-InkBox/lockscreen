@@ -19,6 +19,13 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <stdlib.h>
+#include <cstdlib>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/mount.h>
 
 lockscreen::lockscreen(QDialog *parent)
     : QDialog(parent)
@@ -206,7 +213,16 @@ void lockscreen::on_acceptBtn_clicked()
         for(int pid: pidList) {
             unfreezeApp(pid);
         }
-        qApp->quit();
+        QThread::msleep(200);
+        char * pipe = "/dev/ipd/fifo";
+        int fd = ::open(pipe, O_RDWR); // O_WRONLY // https://stackoverflow.com/questions/24099693/c-linux-named-pipe-hanging-on-open-with-o-wronly
+
+        string testString = "stop0";
+        ::write(fd, testString.c_str(), 5);
+        QThread::msleep(200);
+        ::write(fd, testString.c_str(), 5);
+        ::close(fd);
+        qApp->exit(0);
     }
     else {
         qDebug() << "Password is incorect";
