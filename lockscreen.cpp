@@ -41,13 +41,13 @@ lockscreen::lockscreen(QDialog *parent)
     this->setStyleSheet(stylesheetFile.readAll());
     stylesheetFile.close();
 
-    // Nothing other works
+    // Nothing else works
     QRect screenSize = QGuiApplication::screens()[0]->geometry();
     int dialogX = (screenSize.width() / 5) * 3;
     int dialogY = (screenSize.height() / 5) * 3;
     int positionX = ((screenSize.width() - dialogX) / 2);
     int positionY = ((screenSize.height() - dialogY) / 2);
-    qDebug() << dialogX << dialogY << positionX << positionY;
+    // qDebug() << dialogX << dialogY << positionX << positionY;
 
     this->move(positionX, positionY);
     this->setFixedSize(QSize(dialogX, dialogY));
@@ -63,12 +63,13 @@ lockscreen::lockscreen(QDialog *parent)
     ui->b8->setProperty("type", "borderless");
     ui->b9->setProperty("type", "borderless");
     ui->acceptBtn->setProperty("type", "borderless");
-    ui->delButton->setProperty("type", "borderless");
-    ui->ShowPasswordButton->setProperty("type", "borderless");
-
-    ui->ShowPasswordButton->setIcon(QIcon("://resources/show.png"));
-
-    ui->passTextEdit->setStyleSheet("QLineEdit { selection-background-color: white; selection-color: black }");
+    ui->deleteBtn->setProperty("type", "borderless");
+    ui->acceptBtn->setIcon(QIcon(":/resources/arrow-right.png"));
+    ui->deleteBtn->setIcon(QIcon(":/resources/x-circle.png"));
+    ui->showPasswordBtn->setProperty("type", "borderless");
+    ui->showPasswordBtn->setIcon(QIcon(":/resources/show.png"));
+    ui->timeLabel->setStyleSheet("font-size: 15pt");
+    ui->passTextEdit->setStyleSheet("QLineEdit { selection-background-color: white; selection-color: black; font-family: 'u001' }");
 
     // Showing time
     if(checkconfig(".config/02-clock/config") == true) {
@@ -89,8 +90,8 @@ lockscreen::lockscreen(QDialog *parent)
         } );
         t->start();
     }
-    if(choosedBackground == Blank) {
-        ui->frame->setStyleSheet(".QFrame{background-color: white; border: 4px solid black; border-radius: 10px;}");
+    if(chosenBackground == blank) {
+        ui->frame->setStyleSheet(".QFrame{background-color: white; border: 5px solid black; border-radius: 10px; padding: 30px}");
     }
 }
 
@@ -148,19 +149,19 @@ void lockscreen::on_b0_clicked()
 {
     addNumber("0");
     /*
-    struct libevdev * dev = NULL;
-    int fd = ::open("/dev/input/event1", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
-    int rc = libevdev_new_from_fd(fd, &dev);
-    if(libevdev_grab(dev, LIBEVDEV_GRAB) == 0) {
-        qDebug() << "Grabbed touchscreen";
-    }
-    else {
-        qDebug() << "ERROR: Failed to grab touchscreen";
-    }
+        struct libevdev * dev = NULL;
+        int fd = ::open("/dev/input/event1", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+        int rc = libevdev_new_from_fd(fd, &dev);
+        if(libevdev_grab(dev, LIBEVDEV_GRAB) == 0) {
+            qDebug() << "Grabbed touchscreen";
+        }
+        else {
+            qDebug() << "ERROR: Failed to grab touchscreen";
+        }
 
-    if (rc < 0) {
-        qDebug() << "ERROR: Failed to init libevdev";
-    }
+        if (rc < 0) {
+            qDebug() << "ERROR: Failed to init libevdev";
+        }
     */
 }
 
@@ -172,26 +173,29 @@ void lockscreen::addNumber(QString number) {
     }
     else {
         int count = passcode.count();
-        QString hiddedPasscode = "";
+        QString hiddenPasscode = "";
         for (int i = 0; i < count; i++) {
-            hiddedPasscode.append("●");
+            hiddenPasscode.append("●");
         }
-        ui->passTextEdit->setText(hiddedPasscode);
+        ui->passTextEdit->setText(hiddenPasscode);
     }
 }
 
-void lockscreen::on_ShowPasswordButton_clicked()
+void lockscreen::on_showPasswordBtn_clicked()
 {
     if(showPasscode == true) {
         showPasscode = false;
         addNumber("");
+        ui->showPasswordBtn->setIcon(QIcon(":/resources/show.png"));
     }
     else {
         showPasscode = true;
         addNumber("");
+        ui->showPasswordBtn->setIcon(QIcon(":/resources/hide.png"));
     }
 }
-void lockscreen::on_delButton_clicked()
+
+void lockscreen::on_deleteBtn_clicked()
 {
     passcode.chop(1);
     addNumber("");
@@ -228,6 +232,6 @@ void lockscreen::on_acceptBtn_clicked()
         qDebug() << "Password is incorect";
         passcode = "";
         addNumber("");
-        QMessageBox::critical(this, tr("Invalid passcode"), tr("Invalid passcode. Please try again."));
+        QMessageBox::critical(this, tr("Invalid passcode"), tr("<font face='u001'>Invalid passcode. Please try again.</font>"));
     }
 }

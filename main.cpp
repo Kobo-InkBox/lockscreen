@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     QString fuserOutput = launchProcess("/usr/bin/fuser", QStringList{"/dev/input/event1"}).replace("\n", "");
     fuserOutput.chop(1);
-    qDebug() << "Fuser output: '" << fuserOutput << "'";
+    qDebug() << "fuser output: '" << fuserOutput << "'";
 
     int ipdPid = getPidByName("ipd");
     qDebug() << "ipdPid: " << ipdPid;
@@ -47,30 +47,30 @@ int main(int argc, char *argv[])
     QString content = readFile(".config/12-lockscreen/background");
     // Options are: blank, screensaver, background
     if(content.contains("background") == true) {
-        choosedBackground = Background;
-        qDebug() << "choosedBackground is: " << "Background";
-        // This isin't propably needed because IPD will handle that.. leave the code if its needed in the future
-        /*
-        // For ibxd
-        elif [[ "$line" == "screenshot" ]]; then
-                fbgrab /tmp/screenshot.png
-        fi
-        */
-        /*
-        std::ofstream fhandler;
-        fhandler.open("/opt/ibxd");
-        fhandler << "screenshot\n";
-        fhandler.close();
-        QThread::msleep(400);
+        chosenBackground = background;
+        qDebug() << "chosenBackground is: " << "background";
+        // This propably isn't needed because IPD will handle that
+            /*
+            // For ibxd
+            elif [[ "$line" == "screenshot" ]]; then
+                    fbgrab /tmp/screenshot.png
+            fi
+            */
+            /*
+            std::ofstream fhandler;
+            fhandler.open("/opt/ibxd");
+            fhandler << "screenshot\n";
+            fhandler.close();
+            QThread::msleep(400);
         */
     }
     else if(content.contains("blank") == true) {
-        choosedBackground = Blank;
-        qDebug() << "choosedBackground is: " << "Blank";
+        chosenBackground = blank;
+        qDebug() << "chosenBackground is: " << "blank";
     }
     else if(content.contains("screensaver") == true) {
-        choosedBackground = ScreenSaver;
-        qDebug() << "choosedBackground is: " << "ScreenSaver";
+        chosenBackground = screenSaver;
+        qDebug() << "chosenBackground is: " << "screenSaver";
     }
 
     MainWindow w;

@@ -15,10 +15,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    if(choosedBackground == Background) {
+    if(chosenBackground == background) {
         this->ui->centralwidget->setStyleSheet("background-image:url(\"/external_root/tmp/lockscreen.png\"); background-position: center;");
     }
-    if(choosedBackground == ScreenSaver){
+    if(chosenBackground == screenSaver){
         QString screenSaverUsedPath = "/external_root/tmp/screensaver-used.txt";
         if(QFile(screenSaverUsedPath).exists() == true) {
             QString screenSaverFilePath = readFile(screenSaverUsedPath).replace("\n", "");
@@ -27,10 +27,10 @@ MainWindow::MainWindow(QWidget *parent) :
              this->ui->centralwidget->setStyleSheet(stylesheetReplace.replace("PATH", path));
         }
         else {
-            choosedBackground = Blank;
+            chosenBackground = blank;
         }
     }
-    if(choosedBackground == Blank) {
+    if(chosenBackground == blank) {
         this->ui->centralwidget->setStyleSheet("background-color: white");
     }
     QTimer::singleShot(100, this, &MainWindow::launchDialog);

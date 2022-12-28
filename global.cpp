@@ -10,7 +10,7 @@
 
 #include <signal.h>
 
-option choosedBackground = option::Blank;
+option chosenBackground = option::blank;
 
 bool checkconfig(QString file) {
     QFile config(file);
@@ -59,35 +59,35 @@ QByteArray readFileBytes(QString file) {
 }
 
 QString launchProcess(QString path, QStringList args) {
-    QProcess *Process = new QProcess();
-    Process->start(path, args);
-    Process->waitForFinished();
-    Process->deleteLater();
-    return QString(Process->readAllStandardOutput());
+    QProcess *process = new QProcess();
+    process->start(path, args);
+    process->waitForFinished();
+    process->deleteLater();
+    return QString(process->readAllStandardOutput());
 }
 
 int getPidByName(QString name) {
-    QDirIterator appsDir("/proc", QDirIterator::NoIteratorFlags);
-    while (appsDir.hasNext()) {
-        QDir dir(appsDir.next());
+    QDirIterator appsDirectory("/proc", QDirIterator::NoIteratorFlags);
+    while (appsDirectory.hasNext()) {
+        QDir directory(appsDirectory.next());
 
-        // This doesnt work, but its literally coppied code from inkbox...
+        // This doesn't work, but it is literally copied code from InkBox...
         // QFile process = QFile(dir.path() + "/cmdline");
         QFile processPath;
-        processPath.setFileName(dir.path() + "/cmdline");
+        processPath.setFileName(directory.path() + "/cmdline");
 
         if(processPath.exists() == true) {
             processPath.open(QIODevice::ReadOnly);
             QTextStream stream(&processPath);
             if(stream.readLine().contains(name) == true) {
                 processPath.close();
-                qDebug() << "pid found: " << dir.dirName();
-                return QVariant(dir.dirName()).toInt();
+                qDebug() << "PID found: " << directory.dirName();
+                return QVariant(directory.dirName()).toInt();
             }
             processPath.close();
         }
     }
-    qDebug() << "Pid wasn't found";
+    qDebug() << "PID wasn't found";
     return NULL;
 }
 

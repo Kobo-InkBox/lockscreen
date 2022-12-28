@@ -1,5 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>resources/show.png</file>
+	<file>resources/hide.png</file>
+	<file>resources/x-circle.png</file>
+	<file>resources/arrow-right.png</file>
     </qresource>
 </RCC>

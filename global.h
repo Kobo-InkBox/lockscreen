@@ -12,29 +12,20 @@ class QStringList;
 QT_END_NAMESPACE
 
 enum option {
-    Background,
-    Blank,
-    ScreenSaver,
+    background,
+    blank,
+    screenSaver,
 };
 
-extern option choosedBackground;
-
+extern option chosenBackground;
 extern bool checkconfig(QString file);
-
 extern void setDefaultWorkDir();
-
 extern QString readFile(QString file);
-
 extern int getPidByName(QString name);
-
 extern QString launchProcess(QString path, QStringList args);
-
 extern QVector<int> pidList;
-
 extern void freezeApp(int pid);
-
 extern void unfreezeApp(int pid);
-
 extern QByteArray readFileBytes(QString file);
 
 #endif // GLOBAL_H
