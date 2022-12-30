@@ -5,7 +5,6 @@
 #include <QTimer>
 #include <QTime>
 #include <QDebug>
-#include <QProcess>
 #include <QMessageBox>
 #include <QFile>
 #include <QThread>
@@ -13,6 +12,8 @@
 #include <QDebug>
 #include <QScreen>
 #include <QCryptographicHash>
+#include <QRandomGenerator>
+#include <QProcess>
 
 #include <QApplication>
 
@@ -33,6 +34,11 @@ lockscreen::lockscreen(QDialog *parent)
 {
     ui->setupUi(this);
     qDebug() << "Setting up lockscreen";
+    if(checkconfig("/tmp/setPasscode") == true) {
+        setPasscode = true;
+        QFile::remove("/tmp/setPasscode");
+        qDebug() << "Running in passcode setting mode";
+    }
 
     // Stylesheet
     QApplication::setStyle("windows");
@@ -62,33 +68,54 @@ lockscreen::lockscreen(QDialog *parent)
     ui->b7->setProperty("type", "borderless");
     ui->b8->setProperty("type", "borderless");
     ui->b9->setProperty("type", "borderless");
+    int buttonFontSize = 13;
+    ui->b0->setStyleSheet("font-size: " + QString::number(buttonFontSize) + "pt");
+    ui->b1->setStyleSheet("font-size: " + QString::number(buttonFontSize) + "pt");
+    ui->b2->setStyleSheet("font-size: " + QString::number(buttonFontSize) + "pt");
+    ui->b3->setStyleSheet("font-size: " + QString::number(buttonFontSize) + "pt");
+    ui->b4->setStyleSheet("font-size: " + QString::number(buttonFontSize) + "pt");
+    ui->b5->setStyleSheet("font-size: " + QString::number(buttonFontSize) + "pt");
+    ui->b6->setStyleSheet("font-size: " + QString::number(buttonFontSize) + "pt");
+    ui->b7->setStyleSheet("font-size: " + QString::number(buttonFontSize) + "pt");
+    ui->b8->setStyleSheet("font-size: " + QString::number(buttonFontSize) + "pt");
+    ui->b9->setStyleSheet("font-size: " + QString::number(buttonFontSize) + "pt");
     ui->acceptBtn->setProperty("type", "borderless");
     ui->deleteBtn->setProperty("type", "borderless");
     ui->acceptBtn->setIcon(QIcon(":/resources/arrow-right.png"));
     ui->deleteBtn->setIcon(QIcon(":/resources/x-circle.png"));
-    ui->showPasswordBtn->setProperty("type", "borderless");
-    ui->showPasswordBtn->setIcon(QIcon(":/resources/show.png"));
-    ui->timeLabel->setStyleSheet("font-size: 15pt");
-    ui->passTextEdit->setStyleSheet("QLineEdit { selection-background-color: white; selection-color: black; font-family: 'u001' }");
-
-    // Showing time
-    if(checkconfig(".config/02-clock/config") == true) {
-        QTimer *t = new QTimer(this);
-        t->setInterval(500);
-        connect(t, &QTimer::timeout, [&]() {
-           QString time = QTime::currentTime().toString("hh:mm:ss");
-           ui->timeLabel->setText(time);
-        } );
-        t->start();
+    ui->showPasscodeBtn->setProperty("type", "borderless");
+    ui->showPasscodeBtn->setIcon(QIcon(":/resources/show.png"));
+    if(setPasscode == true) {
+        ui->timeLabel->setStyleSheet("font-size: 12pt");
     }
     else {
-        QTimer *t = new QTimer(this);
-        t->setInterval(500);
-        connect(t, &QTimer::timeout, [&]() {
-           QString time = QTime::currentTime().toString("hh:mm");
-           ui->timeLabel->setText(time);
-        } );
-        t->start();
+        ui->timeLabel->setStyleSheet("font-size: 15pt");
+    }
+    ui->passTextEdit->setStyleSheet("QLineEdit { selection-background-color: white; selection-color: black; font-family: 'u001' }");
+
+    if(setPasscode == true) {
+        ui->timeLabel->setText("Enter a passcode");
+    }
+    else {
+        // Showing time
+        if(checkconfig(".config/02-clock/config") == true) {
+            QTimer *t = new QTimer(this);
+            t->setInterval(500);
+            connect(t, &QTimer::timeout, [&]() {
+               QString time = QTime::currentTime().toString("hh:mm:ss");
+               ui->timeLabel->setText(time);
+            } );
+            t->start();
+        }
+        else {
+            QTimer *t = new QTimer(this);
+            t->setInterval(500);
+            connect(t, &QTimer::timeout, [&]() {
+               QString time = QTime::currentTime().toString("hh:mm");
+               ui->timeLabel->setText(time);
+            } );
+            t->start();
+        }
     }
     if(chosenBackground == blank) {
         ui->frame->setStyleSheet(".QFrame{background-color: white; border: 5px solid black; border-radius: 10px; padding: 30px}");
@@ -181,57 +208,74 @@ void lockscreen::addNumber(QString number) {
     }
 }
 
-void lockscreen::on_showPasswordBtn_clicked()
+void lockscreen::on_showPasscodeBtn_clicked()
 {
     if(showPasscode == true) {
         showPasscode = false;
         addNumber("");
-        ui->showPasswordBtn->setIcon(QIcon(":/resources/show.png"));
+        ui->showPasscodeBtn->setIcon(QIcon(":/resources/show.png"));
     }
     else {
         showPasscode = true;
         addNumber("");
-        ui->showPasswordBtn->setIcon(QIcon(":/resources/hide.png"));
+        ui->showPasscodeBtn->setIcon(QIcon(":/resources/hide.png"));
     }
 }
 
 void lockscreen::on_deleteBtn_clicked()
 {
-    passcode.chop(1);
+    passcode = "";
     addNumber("");
 }
 
 void lockscreen::on_acceptBtn_clicked()
 {
-    QByteArray passwordBytes = readFileBytes(".config/12-lockscreen/password");
-    QString saltBytes = readFile(".config/12-lockscreen/salt").replace("\n", "");
-
-    QCryptographicHash hasher(QCryptographicHash::RealSha3_512);
-    hasher.addData(passcode.toLocal8Bit() + saltBytes.toLocal8Bit());
-
-    QByteArray hash = hasher.result();
-    qDebug() << "Hash is: " << hash;
-
-    if(hash == passwordBytes) {
-        qDebug() << "Correct password provided";
-        for(int pid: pidList) {
-            unfreezeApp(pid);
-        }
-        QThread::msleep(200);
-        char * pipe = "/dev/ipd/fifo";
-        int fd = ::open(pipe, O_RDWR); // O_WRONLY // https://stackoverflow.com/questions/24099693/c-linux-named-pipe-hanging-on-open-with-o-wronly
-
-        string testString = "stop0";
-        ::write(fd, testString.c_str(), 5);
-        QThread::msleep(200);
-        ::write(fd, testString.c_str(), 5);
-        ::close(fd);
-        qApp->exit(0);
+    setDefaultWorkDir();
+    if(setPasscode == true) {
+        QCryptographicHash hasher(QCryptographicHash::RealSha3_512);
+        // Generating and saving salt
+        QString saltBytes = QString::number(QRandomGenerator::system()->generate());
+        writeFile(".config/12-lockscreen/salt", saltBytes);
+        // Hashing passcode and salt together
+        hasher.addData(passcode.toLocal8Bit() + saltBytes.toLocal8Bit());
+        QByteArray hash = hasher.result();
+        QString passcodeBytes = hash.toBase64();
+        writeFile(".config/12-lockscreen/passcode", passcodeBytes);
+        qDebug() << "Hash is (Base64):" << passcodeBytes;
+        // Restarting InkBox GUI
+        QProcess process;
+        process.startDetached("inkbox", QStringList());
+        qApp->quit();
     }
     else {
-        qDebug() << "Password is incorect";
-        passcode = "";
-        addNumber("");
-        QMessageBox::critical(this, tr("Invalid passcode"), tr("<font face='u001'>Invalid passcode. Please try again.</font>"));
+        QByteArray passcodeBytes = QByteArray::fromBase64(readFileBytes(".config/12-lockscreen/passcode"));
+        QString saltBytes = readFile(".config/12-lockscreen/salt");
+        QCryptographicHash hasher(QCryptographicHash::RealSha3_512);
+        hasher.addData(passcode.toLocal8Bit() + saltBytes.toLocal8Bit());
+        QByteArray hash = hasher.result();
+        qDebug() << "Hash is (Base64):" << hash.toBase64();
+
+        if(hash == passcodeBytes) {
+            qDebug() << "Correct passcode provided";
+            for(int pid: pidList) {
+                unfreezeApp(pid);
+            }
+            QThread::msleep(200);
+            char * pipe = "/dev/ipd/fifo";
+            int fd = ::open(pipe, O_RDWR); // O_WRONLY // https://stackoverflow.com/questions/24099693/c-linux-named-pipe-hanging-on-open-with-o-wronly
+
+            string testString = "stop0";
+            ::write(fd, testString.c_str(), 5);
+            QThread::msleep(200);
+            ::write(fd, testString.c_str(), 5);
+            ::close(fd);
+            qApp->exit(0);
+        }
+        else {
+            qDebug() << "Passcode is incorrect";
+            passcode = "";
+            addNumber("");
+            QMessageBox::critical(this, tr("Invalid passcode"), tr("<font face='u001'>Invalid passcode. Please try again.</font>"));
+        }
     }
 }

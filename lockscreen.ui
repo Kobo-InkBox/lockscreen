@@ -89,7 +89,7 @@
          <number>0</number>
         </property>
         <property name="text">
-         <string>00:00</string>
+         <string/>
         </property>
         <property name="alignment">
          <set>Qt::AlignCenter</set>
@@ -115,7 +115,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="showPasswordBtn">
+         <widget class="QPushButton" name="showPasscodeBtn">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
