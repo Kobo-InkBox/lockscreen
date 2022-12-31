@@ -72,6 +72,15 @@ int main(int argc, char *argv[])
         chosenBackground = screenSaver;
         qDebug() << "chosenBackground is: " << "screenSaver";
     }
+    else {
+        QFile file(".config/12-lockscreen/background");
+        if(file.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text)) {
+            QTextStream stream(&file);
+            stream << "blank";
+        }
+        chosenBackground = blank;
+        qDebug() << "chosenBackground is:" << "blank (default)";
+    }
 
     MainWindow w;
     const QScreen* screen = qApp->primaryScreen();

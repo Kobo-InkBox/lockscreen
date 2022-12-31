@@ -117,9 +117,7 @@ lockscreen::lockscreen(QDialog *parent)
             t->start();
         }
     }
-    if(chosenBackground == blank) {
-        ui->frame->setStyleSheet(".QFrame{background-color: white; border: 5px solid black; border-radius: 10px; padding: 30px}");
-    }
+    ui->frame->setStyleSheet(".QFrame{background-color: white; border: 5px solid black; border-radius: 10px; padding: 30px}");
 }
 
 lockscreen::~lockscreen()
@@ -269,6 +267,13 @@ void lockscreen::on_acceptBtn_clicked()
             QThread::msleep(200);
             ::write(fd, testString.c_str(), 5);
             ::close(fd);
+            if(char * initialLaunch = std::getenv("INITIAL_LAUNCH")) {
+                if(std::atoi(initialLaunch) == 1) {
+                    // Starting InkBox GUI
+                    QProcess process;
+                    process.startDetached("inkbox", QStringList());
+                }
+            }
             qApp->exit(0);
         }
         else {
