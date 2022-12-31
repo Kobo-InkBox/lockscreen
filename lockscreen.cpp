@@ -117,7 +117,34 @@ lockscreen::lockscreen(QDialog *parent)
             t->start();
         }
     }
-    ui->frame->setStyleSheet(".QFrame{background-color: white; border: 5px solid black; border-radius: 10px; padding: 30px}");
+
+    {
+        QString deviceID = readFile("/opt/inkbox_device");
+        int borderWidth;
+        int padding;
+        if(deviceID == "n705\n" or deviceID == "n905\n" or deviceID == "kt\n") {
+            borderWidth = 4;
+            padding = 15;
+        }
+        else if(deviceID == "n613\n" or deviceID == "n236\n" or deviceID == "n306\n") {
+            borderWidth = 4;
+            padding = 20;
+        }
+        else if(deviceID == "n437\n" or deviceID == "n249\n") {
+            borderWidth = 5;
+            padding = 30;
+        }
+        else if(deviceID == "n873\n") {
+            borderWidth = 6;
+            padding = 40;
+        }
+        else {
+            borderWidth = 3;
+            padding = 15;
+        }
+        // Rounded corners would have been nice, but here, with the variety of things displayed, we can't ensure we won't get any "sharp edges" issues (because the corners are not transparent, thank Qt)
+        ui->frame->setStyleSheet(".QFrame{background-color: white; border: " + QString::number(borderWidth) + "px solid black; padding: " + QString::number(padding) + "px}");
+    }
 }
 
 lockscreen::~lockscreen()

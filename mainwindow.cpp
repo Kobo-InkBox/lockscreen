@@ -31,10 +31,9 @@ MainWindow::MainWindow(QWidget *parent) :
         }
     }
     if(chosenBackground == blank) {
-        this->ui->centralwidget->setStyleSheet("background-color: white");
+        this->ui->centralwidget->setStyleSheet("background-color: #3e3e3e");
     }
     QTimer::singleShot(100, this, &MainWindow::launchDialog);
-
 }
 
 MainWindow::~MainWindow()
